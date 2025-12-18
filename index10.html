@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スケジュール管理</title>
+
+  <!-- ★ PWA用 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1976d2">
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    input, button {
+      font-size: 16px;
+      padding: 6px;
+    }
+    ul {
+      padding-left: 0;
+    }
+    li {
+      list-style: none;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .date {
+      font-weight: bold;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>予定</h1>
+
+<input type="date" id="dateInput">
+<input type="text" id="textInput" placeholder="予定（例：10:00 会議）">
+<button onclick="add()">追加</button>
+
+<ul id="list"></ul>
+
+<script>
+  let schedules = JSON.parse(localStorage.getItem("schedules") || "[]");
+
+  function add() {
+    const date = dateInput.value;
+    const text = textInput.value;
+    if (!date || !text) return;
+
+    schedules.push({ date, text });
+    save();
+    textInput.value = "";
+    render();
+  }
+
+  function remove(index) {
+    schedules.splice(index, 1);
+    save();
+    render();
+  }
+
+  function save() {
+    localStorage.setItem("schedules", JSON.stringify(schedules));
+  }
+
+  function render() {
+    list.innerHTML = "";
+
+    schedules
+      .filter(s => s.date >= today())
+      .sort((a, b) =>
+        a.date === b.date
+          ? a.text.localeCompare(b.text)
+          : a.date.localeCompare(b.date)
+      )
+      .forEach((s, i) => {
+        const li = document.createElement("li");
+
+        const span = document.createElement("span");
+        span.innerHTML = `<span class="date">${s.date}</span>${s.text}`;
+
+        const btn = document.createElement("button");
+        btn.textContent = "削除";
+        btn.onclick = () => remove(i);
+
+        li.appendChild(span);
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+  }
+
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  render();
+
+  // ★ Service Worker 登録
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+
+</body>
+</html>
