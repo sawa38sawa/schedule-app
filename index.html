@@ -11,8 +11,11 @@
   <link rel="icon" href="icon.png">
 </head>
 <body>
+
   <h1>直近30日の予定</h1>
 
+  <!-- カレンダー入力 -->
+  <input id="dateInput" type="date">
   <input id="scheduleInput" type="text" placeholder="予定を入力">
   <button onclick="addSchedule()">追加</button>
 
@@ -27,11 +30,17 @@
       function render() {
         const list = document.getElementById("scheduleList");
         list.innerHTML = "";
+
+        // 日付昇順、時間昇順（時間なしは前に）
         schedules
-          .sort((a,b) => new Date(a.date) - new Date(b.date))
+          .sort((a,b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateA - dateB;
+          })
           .forEach((item, index) => {
             const li = document.createElement("li");
-            li.textContent = item.date.substring(0,10) + " " + item.text;
+            li.textContent = item.date + " " + item.text;
 
             const btn = document.createElement("button");
             btn.textContent = "削除";
@@ -45,10 +54,17 @@
 
       window.addSchedule = function() {
         const input = document.getElementById("scheduleInput");
-        if (input.value === "") return;
-        schedules.push({date: new Date().toISOString(), text: input.value});
+        const dateInput = document.getElementById("dateInput");
+        if (input.value === "" || dateInput.value === "") return;
+
+        schedules.push({
+          date: dateInput.value,
+          text: input.value
+        });
+
         localStorage.setItem("schedules", JSON.stringify(schedules));
         input.value = "";
+        dateInput.value = "";
         render();
       };
 
