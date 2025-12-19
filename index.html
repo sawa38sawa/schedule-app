@@ -10,6 +10,8 @@
     button { margin-left: 8px; }
     .activeFilter { background-color: #4CAF50; color: white; }
   </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4CAF50">
 </head>
 <body>
 
@@ -20,7 +22,7 @@
   <button id="addBtn">追加</button>
   <button id="deleteSelectedBtn">削除</button>
 
-  <div id="filterButtons" style="margin-top: 12px;">
+  <div style="margin-top: 12px;">
     <button onclick="setFilter('future30', this)">直近30日</button>
     <button onclick="setFilter('futureAll', this)">すべて</button>
     <button onclick="setFilter('past', this)">過去</button>
@@ -120,7 +122,7 @@
 
     function setFilter(f, btn){
       currentFilter = f;
-      document.querySelectorAll('#filterButtons button').forEach(b => b.classList.remove('activeFilter'));
+      document.querySelectorAll('div button').forEach(b => b.classList.remove('activeFilter'));
       btn.classList.add('activeFilter');
       render();
     }
@@ -129,9 +131,18 @@
     document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
 
     // デフォルト選択を反映
-    document.querySelectorAll('#filterButtons button')[0].classList.add('activeFilter');
+    document.querySelectorAll('div button')[0].classList.add('activeFilter');
 
     render();
+
+    // Service Worker 登録 (PWA化)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW登録成功', reg))
+          .catch(err => console.log('SW登録失敗', err));
+      });
+    }
   </script>
 
 </body>
