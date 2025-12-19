@@ -109,7 +109,20 @@
       render();
     }
 
-    document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
+    function deleteSelected() {
+  const checkboxes = document.querySelectorAll("#scheduleList input[type=checkbox]");
+  const indexesToDelete = [];
+
+  checkboxes.forEach(cb => {
+    if (cb.checked) indexesToDelete.push(Number(cb.dataset.index));
+  });
+
+  // 高いインデックスから削除することで順序崩れ防止
+  indexesToDelete.sort((a, b) => b - a).forEach(i => schedules.splice(i, 1));
+
+  localStorage.setItem("schedules", JSON.stringify(schedules));
+  render();
+}
 
 
     function setFilter(f, btn){
@@ -139,4 +152,5 @@
 
 </body>
 </html>
+
 
