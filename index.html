@@ -2,16 +2,16 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>スケジュール管理アプリ</title>
   <style>
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin-bottom: 4px; }
     .textSpan { display: inline-block; width: 45ch; overflow: hidden; }
-    button { margin-left: 8px; }
+    button { margin-left: 8px; font-size: 16px; padding: 6px 12px; }
+    input { font-size: 16px; padding: 6px 8px; }
     .activeFilter { background-color: #4CAF50; color: white; }
   </style>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4CAF50">
 </head>
 <body>
 
@@ -134,15 +134,6 @@
     document.querySelectorAll('div button')[0].classList.add('activeFilter');
 
     render();
-
-    // Service Worker 登録 (PWA化)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW登録成功', reg))
-          .catch(err => console.log('SW登録失敗', err));
-      });
-    }
   </script>
 
 </body>
