@@ -109,17 +109,8 @@
       render();
     }
 
-    function deleteSelected() {
-      const checkboxes = document.querySelectorAll("#scheduleList input[type=checkbox]");
-      const indexesToDelete = [];
-      checkboxes.forEach(cb => {
-        if(cb.checked) indexesToDelete.push(Number(cb.dataset.index));
-      });
-      indexesToDelete.sort((a,b)=>b-a).forEach(i => schedules.splice(i,1));
+    document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
 
-      localStorage.setItem("schedules", JSON.stringify(schedules));
-      render();
-    }
 
     function setFilter(f, btn){
       currentFilter = f;
@@ -148,3 +139,4 @@
 
 </body>
 </html>
+
