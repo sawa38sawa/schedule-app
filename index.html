@@ -3,9 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>スケジュール管理アプリ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4CAF50">
   <style>
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin-bottom: 4px; }
@@ -21,7 +18,6 @@
   <input id="scheduleDate" type="date">
   <input id="scheduleInput" type="text" placeholder="予定を入力">
   <button id="addBtn">追加</button>
-  <button id="deleteSelectedBtn">削除</button>
 
   <div style="margin-top: 12px;">
     <button onclick="setFilter('future30', this)">直近30日</button>
@@ -81,12 +77,16 @@
           textSpan.className = "textSpan";
           textSpan.textContent = formatDateWithWeekday(item.date) + " " + item.text;
 
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.dataset.index = index;
+          const btn = document.createElement("button");
+          btn.textContent = "削除";
+          btn.onclick = function() {
+            schedules.splice(index,1);
+            localStorage.setItem("schedules", JSON.stringify(schedules));
+            render();
+          };
 
           li.appendChild(textSpan);
-          li.appendChild(checkbox);
+          li.appendChild(btn);
           list.appendChild(li);
         });
     }
@@ -109,22 +109,6 @@
       render();
     }
 
-    function deleteSelected() {
-  const checkboxes = document.querySelectorAll("#scheduleList input[type=checkbox]");
-  const indexesToDelete = [];
-
-  checkboxes.forEach(cb => {
-    if (cb.checked) indexesToDelete.push(Number(cb.dataset.index));
-  });
-
-  // 高いインデックスから削除することで順序崩れ防止
-  indexesToDelete.sort((a, b) => b - a).forEach(i => schedules.splice(i, 1));
-
-  localStorage.setItem("schedules", JSON.stringify(schedules));
-  render();
-}
-
-
     function setFilter(f, btn){
       currentFilter = f;
       document.querySelectorAll('div button').forEach(b => b.classList.remove('activeFilter'));
@@ -133,24 +117,12 @@
     }
 
     document.getElementById("addBtn").onclick = addSchedule;
-    document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
 
     // デフォルト選択を反映
     document.querySelectorAll('div button')[0].classList.add('activeFilter');
 
     render();
-
-    // ✅ Service Worker 登録
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('SW registered: ', reg))
-          .catch(err => console.log('SW registration failed: ', err));
-      });
-    }
   </script>
 
 </body>
 </html>
-
-
