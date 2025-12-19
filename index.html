@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>スケジュール管理アプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4CAF50">
   <style>
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin-bottom: 4px; }
@@ -68,21 +71,19 @@
       const list = document.getElementById("scheduleList");
       list.innerHTML = "";
 
-      // 元のインデックスを保持して表示
       schedules
-        .map((item, idx) => ({item, idx}))
-        .filter(pair => filterSchedules(pair.item))
-        .sort((a,b)=> new Date(a.item.date) - new Date(b.item.date))
-        .forEach(pair => {
+        .filter(filterSchedules)
+        .sort((a,b) => new Date(a.date) - new Date(b.date))
+        .forEach((item,index) => {
           const li = document.createElement("li");
 
           const textSpan = document.createElement("span");
           textSpan.className = "textSpan";
-          textSpan.textContent = formatDateWithWeekday(pair.item.date) + " " + pair.item.text;
+          textSpan.textContent = formatDateWithWeekday(item.date) + " " + item.text;
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.dataset.index = pair.idx; // 元配列のインデックスを保持
+          checkbox.dataset.index = index;
 
           li.appendChild(textSpan);
           li.appendChild(checkbox);
@@ -114,7 +115,6 @@
       checkboxes.forEach(cb => {
         if(cb.checked) indexesToDelete.push(Number(cb.dataset.index));
       });
-      // 高い順に削除して配列ずれ防止
       indexesToDelete.sort((a,b)=>b-a).forEach(i => schedules.splice(i,1));
 
       localStorage.setItem("schedules", JSON.stringify(schedules));
@@ -135,6 +135,15 @@
     document.querySelectorAll('div button')[0].classList.add('activeFilter');
 
     render();
+
+    // ✅ Service Worker 登録
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered: ', reg))
+          .catch(err => console.log('SW registration failed: ', err));
+      });
+    }
   </script>
 
 </body>
