@@ -20,7 +20,7 @@
   <button id="addBtn">追加</button>
   <button id="deleteSelectedBtn">削除</button>
 
-  <div style="margin-top: 12px;">
+  <div id="filterButtons" style="margin-top: 12px;">
     <button onclick="setFilter('future30', this)">直近30日</button>
     <button onclick="setFilter('futureAll', this)">すべて</button>
     <button onclick="setFilter('past', this)">過去</button>
@@ -120,7 +120,7 @@
 
     function setFilter(f, btn){
       currentFilter = f;
-      document.querySelectorAll('div button').forEach(b => b.classList.remove('activeFilter'));
+      document.querySelectorAll('#filterButtons button').forEach(b => b.classList.remove('activeFilter'));
       btn.classList.add('activeFilter');
       render();
     }
@@ -129,7 +129,7 @@
     document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
 
     // デフォルト選択を反映
-    document.querySelectorAll('div button')[0].classList.add('activeFilter');
+    document.querySelectorAll('#filterButtons button')[0].classList.add('activeFilter');
 
     render();
   </script>
