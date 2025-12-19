@@ -2,14 +2,12 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>スケジュール管理アプリ</title>
   <style>
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin-bottom: 4px; }
     .textSpan { display: inline-block; width: 45ch; overflow: hidden; }
-    button { margin-left: 8px; font-size: 16px; padding: 6px 12px; }
-    input { font-size: 16px; padding: 6px 8px; }
+    button { margin-left: 8px; }
     .activeFilter { background-color: #4CAF50; color: white; }
   </style>
 </head>
@@ -70,19 +68,21 @@
       const list = document.getElementById("scheduleList");
       list.innerHTML = "";
 
+      // 元のインデックスを保持して表示
       schedules
-        .filter(filterSchedules)
-        .sort((a,b) => new Date(a.date) - new Date(b.date))
-        .forEach((item,index) => {
+        .map((item, idx) => ({item, idx}))
+        .filter(pair => filterSchedules(pair.item))
+        .sort((a,b)=> new Date(a.item.date) - new Date(b.item.date))
+        .forEach(pair => {
           const li = document.createElement("li");
 
           const textSpan = document.createElement("span");
           textSpan.className = "textSpan";
-          textSpan.textContent = formatDateWithWeekday(item.date) + " " + item.text;
+          textSpan.textContent = formatDateWithWeekday(pair.item.date) + " " + pair.item.text;
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.dataset.index = index;
+          checkbox.dataset.index = pair.idx; // 元配列のインデックスを保持
 
           li.appendChild(textSpan);
           li.appendChild(checkbox);
@@ -114,6 +114,7 @@
       checkboxes.forEach(cb => {
         if(cb.checked) indexesToDelete.push(Number(cb.dataset.index));
       });
+      // 高い順に削除して配列ずれ防止
       indexesToDelete.sort((a,b)=>b-a).forEach(i => schedules.splice(i,1));
 
       localStorage.setItem("schedules", JSON.stringify(schedules));
