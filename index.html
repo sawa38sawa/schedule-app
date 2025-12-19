@@ -3,88 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <title>スケジュール管理アプリ</title>
-
-  <!-- PWA用マニフェスト -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- アイコン表示用（ブラウザタブ用） -->
-  <link rel="icon" href="icon.png">
+  <style>
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; margin-bottom: 4px; }
+    .textSpan {
+      display: inline-block;
+      width: 20ch;       /* 左から20文字目にチェックボックス */
+      overflow: hidden;
+    }
+    button { margin-left: 8px; }
+  </style>
 </head>
 <body>
 
-  <h1>直近30日の予定</h1>
+  <h1>スケジュール管理</h1>
 
-  <!-- カレンダー入力 -->
-  <input id="dateInput" type="date">
   <input id="scheduleInput" type="text" placeholder="予定を入力">
-  <button onclick="addSchedule()">追加</button>
+  <button id="addBtn">追加</button>
+  <button id="deleteSelectedBtn">削除</button>
+
+  <div style="margin-top: 12px;">
+    <button onclick="setFilter('future30')">直近30日</button>
+    <button onclick="setFilter('futureAll')">すべて</button>
+    <button onclick="setFilter('past')">過去</button>
+  </div>
 
   <ul id="scheduleList"></ul>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      let schedules = [];
-      const saved = localStorage.getItem("schedules");
-      if (saved) schedules = JSON.parse(saved);
+    let schedules = [];
+    const saved = localStorage.getItem("schedules");
+    if (saved) schedules = JSON.parse(saved);
 
-      function render() {
-        const list = document.getElementById("scheduleList");
-        list.innerHTML = "";
+    let currentFilter = "future30";
 
-        // 日付昇順、時間昇順（時間なしは前に）
-        schedules
-          .sort((a,b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateA - dateB;
-          })
-          .forEach((item, index) => {
-            const li = document.createElement("li");
-            li.textContent = item.date + " " + item.text;
-
-            const btn = document.createElement("button");
-            btn.textContent = "削除";
-            btn.style.float = "right";
-            btn.onclick = () => deleteSchedule(index);
-
-            li.appendChild(btn);
-            list.appendChild(li);
-          });
-      }
-
-      window.addSchedule = function() {
-        const input = document.getElementById("scheduleInput");
-        const dateInput = document.getElementById("dateInput");
-        if (input.value === "" || dateInput.value === "") return;
-
-        schedules.push({
-          date: dateInput.value,
-          text: input.value
-        });
-
-        localStorage.setItem("schedules", JSON.stringify(schedules));
-        input.value = "";
-        dateInput.value = "";
-        render();
-      };
-
-      function deleteSchedule(index) {
-        schedules.splice(index, 1);
-        localStorage.setItem("schedules", JSON.stringify(schedules));
-        render();
-      }
-
-      render();
-    });
-  </script>
-
-  <!-- Service Worker 登録 -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker registered"))
-        .catch(err => console.log("Service Worker registration failed:", err));
+    function formatDateWithWeekday(dateString) {
+      const d = new Date(dateString);
+      const weekdays = ["日","月","火","水","木","金","土"];
+      const y = d.getFullYear();
+      const m = (d.getMonth() + 1).toString().padStart(2,'0');
+      const day = d.getDate().toString().padStart(2,'0');
+      const w = weekdays[d.getDay()];
+      return `${y}.${m}.${day} (${w})`;
     }
+
+    function filterSchedules(item) {
+      const today = new Date();
+      const date = new Date(item.date);
+      today.setHours(0,0,0,0);
+
+      switch(currentFilter){
+        case "future30":
+          const end = new Date(today);
+          end.setDate(end.getDate() + 29);
+          return date >= today && date <= end;
+        case "futureAll":
+          return date >= today;
+        case "past":
+          return date < today;
+        default:
+          return true;
+      }
+    }
+
+    function render() {
+      const list = document.getElementById("scheduleList");
+      list.innerHTML = "";
+
+      schedules
+        .filter(filterSchedules)
+        .sort((a,b) => new Date(a.date) - new Date(b.date))
+        .forEach((item,index) => {
+          const li = document.createElement("li");
+
+          const textSpan = document.createElement("span");
+          textSpan.className = "textSpan";
+          textSpan.textContent = formatDateWithWeekday(item.date) + " " + item.text;
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.dataset.index = index;
+
+          li.appendChild(textSpan);
+          li.appendChild(checkbox);
+          list.appendChild(li);
+        });
+    }
+
+    function addSchedule() {
+      const input = document.getElementById("scheduleInput");
+      if(input.value==="") return;
+
+      schedules.push({
+        date: new Date().toISOString(),
+        text: input.value
+      });
+
+      localStorage.setItem("schedules", JSON.stringify(schedules));
+      input.value = "";
+      render();
+    }
+
+    function deleteSelected() {
+      const checkboxes = document.querySelectorAll("#scheduleList input[type=checkbox]");
+      const indexesToDelete = [];
+      checkboxes.forEach(cb => {
+        if(cb.checked) indexesToDelete.push(Number(cb.dataset.index));
+      });
+      // 後ろから削除するとインデックスずれ防止
+      indexesToDelete.sort((a,b)=>b-a).forEach(i => schedules.splice(i,1));
+
+      localStorage.setItem("schedules", JSON.stringify(schedules));
+      render();
+    }
+
+    function setFilter(f){
+      currentFilter = f;
+      render();
+    }
+
+    document.getElementById("addBtn").onclick = addSchedule;
+    document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
+
+    render();
   </script>
 
 </body>
