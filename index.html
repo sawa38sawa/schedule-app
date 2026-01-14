@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>スケジュール管理アプリ</title>
+
+  <!-- PWA / スマホ対応 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4CAF50">
+
   <style>
     ul { list-style: none; padding: 0; }
     li { display: flex; align-items: center; margin-bottom: 4px; }
@@ -31,12 +34,14 @@
   <ul id="scheduleList"></ul>
 
   <script>
+    // --- データ読み込み ---
     let schedules = [];
     const saved = localStorage.getItem("schedules");
     if (saved) schedules = JSON.parse(saved);
 
     let currentFilter = "future30";
 
+    // --- 日付表示 ---
     function formatDateWithWeekday(dateString) {
       const d = new Date(dateString);
       const weekdays = ["日","月","火","水","木","金","土"];
@@ -47,10 +52,11 @@
       return `${y}.${m}.${day} (${w})`;
     }
 
+    // --- フィルタ条件 ---
     function filterSchedules(item) {
       const today = new Date();
-      const date = new Date(item.date);
       today.setHours(0,0,0,0);
+      const date = new Date(item.date);
 
       switch(currentFilter){
         case "future30":
@@ -66,6 +72,7 @@
       }
     }
 
+    // --- 描画 ---
     function render() {
       const list = document.getElementById("scheduleList");
       list.innerHTML = "";
@@ -73,16 +80,17 @@
       schedules
         .filter(filterSchedules)
         .sort((a,b) => new Date(a.date) - new Date(b.date))
-        .forEach((item,index) => {
+        .forEach(item => {
           const li = document.createElement("li");
 
           const textSpan = document.createElement("span");
           textSpan.className = "textSpan";
-          textSpan.textContent = formatDateWithWeekday(item.date) + " " + item.text;
+          textSpan.textContent =
+            formatDateWithWeekday(item.date) + " " + item.text;
 
           const btn = document.createElement("button");
           btn.textContent = "削除";
-          btn.onclick = function() { deleteSchedule(index); };
+          btn.onclick = function() { deleteSchedule(item.id); };
 
           li.appendChild(textSpan);
           li.appendChild(btn);
@@ -90,14 +98,16 @@
         });
     }
 
+    // --- 追加 ---
     function addSchedule() {
       const input = document.getElementById("scheduleInput");
-      if(input.value==="") return;
+      if (input.value === "") return;
 
       const dateInput = document.getElementById("scheduleDate").value;
       const scheduleDate = dateInput ? new Date(dateInput) : new Date();
 
       schedules.push({
+        id: Date.now(),               // ★一意ID
         date: scheduleDate.toISOString(),
         text: input.value
       });
@@ -108,32 +118,36 @@
       render();
     }
 
-    function deleteSchedule(index) {
-      schedules.splice(index,1);
+    // --- 削除（ID指定） ---
+    function deleteSchedule(id) {
+      schedules = schedules.filter(item => item.id !== id);
       localStorage.setItem("schedules", JSON.stringify(schedules));
       render();
     }
 
+    // --- フィルタ切替 ---
     function setFilter(f, btn){
       currentFilter = f;
-      document.querySelectorAll('div button').forEach(b => b.classList.remove('activeFilter'));
+      document.querySelectorAll('div button')
+        .forEach(b => b.classList.remove('activeFilter'));
       btn.classList.add('activeFilter');
       render();
     }
 
     document.getElementById("addBtn").onclick = addSchedule;
 
-    // デフォルト選択を反映
-    document.querySelectorAll('div button')[0].classList.add('activeFilter');
+    // 初期フィルタ表示
+    document.querySelectorAll('div button')[0]
+      .classList.add('activeFilter');
 
     render();
 
-    // --- Service Worker登録 ---
+    // --- Service Worker 登録（PWA） ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js').then(
-          function(reg){ console.log('SW登録成功', reg); },
-          function(err){ console.log('SW登録失敗', err); }
+          reg => console.log('SW登録成功', reg),
+          err => console.log('SW登録失敗', err)
         );
       });
     }
@@ -141,3 +155,4 @@
 
 </body>
 </html>
+
